@@ -1,0 +1,36 @@
+{
+  "ignition": {
+    "version": "3.1.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "path": "/usr/local/bin/setup.sh",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/4TOQUpEMQzG8f07RZxx4SB9QREEz+Al2r4wLaZNSVKcub3wFEQ3s/sWPz7+xztMtWOKVpYjbJI/SEOWNsRoyVMZwjscivuwN8Rz9TLTmqXhN8UfikpM0chwk8/OEjd8Wp9f1xf8exnuH2aPjSDY6Xe30wGCAE5TZMmR96b/MaXJBo+XG0xHC2KuRFC7eWQGrumS9Tp8R9HhXH2xqzm17AxKScSXrwAAAP//a5nBaQoBAAA="
+        },
+        "mode": 493
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "contents": "[Unit]\nAfter=network-online.target\nConditionPathExists=!/var/lib/setup\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/setup.sh\nExecStartPost=/usr/bin/touch /var/lib/setup\nRemainAfterExit=yes\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "setup.service"
+      },
+      {
+        "contents": "[Unit]\nAfter=network-online.target\nConditionPathExists=/var/lib/setup\nConditionPathExists=!/opt/mailcow-dockerized/\n\n[Service]\nType=oneshot\nWorkingDirectory=/opt/\nExecStart=/usr/bin/git clone https://github.com/mailcow/mailcow-dockerized\nRemainAfterExit=yes\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "install-mailcow.service"
+      },
+      {
+        "contents": "[Unit]\nAfter=network-online.target\nConditionPathExists=/var/lib/setup\nConditionPathExists=/opt/mailcow-dockerized/mailcow.conf\n\n[Service]\nType=simple\nWorkingDirectory=/opt/mailcow-dockerized/\nExecStart=/usr/local/bin/docker-compose up\nExecStop=/usr/local/bin/docker-compose down\n\n[Install]\nWantedBy=multi-user.target\n",
+        "enabled": true,
+        "name": "mailcow.service"
+      }
+    ]
+  }
+}

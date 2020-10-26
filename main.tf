@@ -15,4 +15,5 @@ resource "aws_instance" "server" {
   instance_type = "t3a.small"
   ami           = "ami-02bef145f1a0d102a"
   key_name      = aws_key_pair.key.id
+  user_data     = file("config/mailcow.ign")
 }

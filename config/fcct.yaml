@@ -1,0 +1,66 @@
+variant: fcos
+version: 1.1.0
+systemd:
+  units:
+  - name: setup.service
+    enabled: true
+    contents: |
+      [Unit]
+      After=network-online.target
+      ConditionPathExists=!/var/lib/setup
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/setup.sh
+      ExecStartPost=/usr/bin/touch /var/lib/setup
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - name: install-mailcow.service
+    enabled: true
+    contents: |
+      [Unit]
+      After=network-online.target
+      ConditionPathExists=/var/lib/setup
+      ConditionPathExists=!/opt/mailcow-dockerized/
+
+      [Service]
+      Type=oneshot
+      WorkingDirectory=/opt/
+      ExecStart=/usr/bin/git clone https://github.com/mailcow/mailcow-dockerized
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - name: mailcow.service
+    enabled: true
+    contents: |
+      [Unit]
+      After=network-online.target
+      ConditionPathExists=/var/lib/setup
+      ConditionPathExists=/opt/mailcow-dockerized/mailcow.conf
+
+      [Service]
+      Type=simple
+      WorkingDirectory=/opt/mailcow-dockerized/
+      ExecStart=/usr/local/bin/docker-compose up
+      ExecStop=/usr/local/bin/docker-compose down
+
+      [Install]
+      WantedBy=multi-user.target
+
+storage:
+  files:
+  - path: /usr/local/bin/setup.sh
+    mode: 0755
+    contents:
+      inline: |
+        #!/bin/bash
+        # docker-compose
+        curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        rpm-ostree install libxcrypt-compat git
+        systemctl reboot

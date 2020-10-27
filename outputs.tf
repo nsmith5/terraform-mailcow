@@ -1,3 +1,3 @@
-output "address" {
-  value = aws_instance.server.public_ip
+output "main_ip" {
+  value = vultr_server.mailcow.main_ip
 }

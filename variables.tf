@@ -1,3 +1,4 @@
-variable "aws_region" {
-	default = "us-west-2"
+variable ssh_key_ids {
+  default = []
+  description = "A list of SSH key IDs to apply to the server on install"
 }
